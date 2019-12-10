@@ -5,6 +5,9 @@ use core::arch::x86_64::*;
 
 use crate::Table;
 
+const CHUNK_SIZE: usize = 1024;
+const STRIP_SIZE: usize = CHUNK_SIZE / 4;
+
 #[target_feature(enable = "avx2")]
 pub(crate) unsafe fn next_match(
     hash: &mut u64,
@@ -12,17 +15,17 @@ pub(crate) unsafe fn next_match(
     buf: &[u8],
     mask: u64,
 ) -> Option<usize> {
-    for (ic, chunk) in buf.chunks(1024).enumerate() {
-        if chunk.len() != 1024 {
-            return crate::scalar::next_match(hash, table, chunk, mask).map(|off| off + ic * 1024);
+    for (ic, chunk) in buf.chunks(CHUNK_SIZE).enumerate() {
+        if chunk.len() != CHUNK_SIZE {
+            return crate::scalar::next_match(hash, table, chunk, mask).map(|off| off + ic * CHUNK_SIZE);
         }
 
         let mut h = _mm256_setzero_si256();
 
         for i in 0..64 {
-            let b1 = *chunk.get_unchecked((256 * 1 - 64) + i);
-            let b2 = *chunk.get_unchecked((256 * 2 - 64) + i);
-            let b3 = *chunk.get_unchecked((256 * 3 - 64) + i);
+            let b1 = *chunk.get_unchecked((STRIP_SIZE * 1 - 64) + i);
+            let b2 = *chunk.get_unchecked((STRIP_SIZE * 2 - 64) + i);
+            let b3 = *chunk.get_unchecked((STRIP_SIZE * 3 - 64) + i);
 
             let g = _mm256_set_epi64x(
                 0,
@@ -39,11 +42,11 @@ pub(crate) unsafe fn next_match(
         let mut pre_off = usize::max_value();
         let mut pre_hash = 0u64;
 
-        for i in 0..256 {
-            let b0 = *chunk.get_unchecked(256 * 0 + i);
-            let b1 = *chunk.get_unchecked(256 * 1 + i);
-            let b2 = *chunk.get_unchecked(256 * 2 + i);
-            let b3 = *chunk.get_unchecked(256 * 3 + i);
+        for i in 0..STRIP_SIZE {
+            let b0 = *chunk.get_unchecked(STRIP_SIZE * 0 + i);
+            let b1 = *chunk.get_unchecked(STRIP_SIZE * 1 + i);
+            let b2 = *chunk.get_unchecked(STRIP_SIZE * 2 + i);
+            let b3 = *chunk.get_unchecked(STRIP_SIZE * 3 + i);
 
             let g = _mm256_set_epi64x(
                 table[b0 as usize] as i64,
@@ -64,11 +67,11 @@ pub(crate) unsafe fn next_match(
 
             if z & (1u32 << 24) != 0 {
                 *hash = _mm256_extract_epi64(h, 3) as u64;
-                return Some(ic * 1024 + i + 1);
+                return Some(ic * CHUNK_SIZE + i + 1);
             }
 
             if z & (1u32 << 16) != 0 {
-                let off = 256 * 1 + i;
+                let off = STRIP_SIZE * 1 + i;
                 if off < pre_off {
                     pre_off = off;
                     pre_hash = _mm256_extract_epi64(h, 2) as u64;
@@ -76,7 +79,7 @@ pub(crate) unsafe fn next_match(
             }
 
             if z & (1u32 << 8) != 0 {
-                let off = 256 * 2 + i;
+                let off = STRIP_SIZE * 2 + i;
                 if off < pre_off {
                     pre_off = off;
                     pre_hash = _mm256_extract_epi64(h, 1) as u64;
@@ -84,7 +87,7 @@ pub(crate) unsafe fn next_match(
             }
 
             if z & (1u32) != 0 {
-                let off = 256 * 3 + i;
+                let off = STRIP_SIZE * 3 + i;
                 if off < pre_off {
                     pre_off = off;
                     pre_hash = _mm256_extract_epi64(h, 0) as u64;
@@ -94,7 +97,7 @@ pub(crate) unsafe fn next_match(
 
         if pre_off != usize::max_value() {
             *hash = pre_hash;
-            return Some(ic * 1024 + pre_off + 1);
+            return Some(ic * CHUNK_SIZE + pre_off + 1);
         }
 
         *hash = _mm256_extract_epi64(h, 0) as u64;
