@@ -17,7 +17,8 @@ pub(crate) unsafe fn next_match(
 ) -> Option<usize> {
     for (ic, chunk) in buf.chunks(CHUNK_SIZE).enumerate() {
         if chunk.len() != CHUNK_SIZE {
-            return crate::scalar::next_match(hash, table, chunk, mask).map(|off| off + ic * CHUNK_SIZE);
+            return crate::scalar::next_match(hash, table, chunk, mask)
+                .map(|off| off + ic * CHUNK_SIZE);
         }
 
         let mut hx = 0u64;
