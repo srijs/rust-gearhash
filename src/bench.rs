@@ -20,15 +20,13 @@ where
     b.iter(|| {
         let mut hash = 0;
         let mut offset = 0;
-        let mut matches = vec![];
 
-        loop {
-            if let Some(m) = f(&mut hash, &BENCH_INPUT_BUF[offset..], BENCH_MASK) {
-                offset += m;
-                matches.push(m);
-            } else {
-                return matches;
-            }
+        while let Some(m) = f(
+            test::black_box(&mut hash),
+            test::black_box(&BENCH_INPUT_BUF[offset..]),
+            test::black_box(BENCH_MASK),
+        ) {
+            offset += test::black_box(m);
         }
     })
 }
