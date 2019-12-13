@@ -22,6 +22,7 @@ mod table;
 pub use table::{Table, DEFAULT_TABLE};
 
 /// Gear hash state.
+#[derive(Clone)]
 pub struct Hasher<'t> {
     table: &'t Table,
     hash: u64,
@@ -63,5 +64,19 @@ impl<'t> Hasher<'t> {
     /// Set the hash value to the given integer.
     pub fn set_hash(&mut self, hash: u64) {
         self.hash = hash
+    }
+}
+
+impl Default for Hasher<'static> {
+    fn default() -> Self {
+        Hasher::new(&DEFAULT_TABLE)
+    }
+}
+
+impl<'t> std::fmt::Debug for Hasher<'t> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("Hasher")
+            .field("hash", &self.hash)
+            .finish()
     }
 }
