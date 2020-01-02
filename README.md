@@ -20,7 +20,7 @@ let mut chunks = vec![];
 let mut offset = 0;
 
 // create new hasher
-let mut hasher = Hasher::new();
+let mut hasher = Hasher::default();
 
 // loop through all matches, and push the corresponding chunks
 while let Some(boundary) = hasher.next_match(&buf[offset..], MASK) {
