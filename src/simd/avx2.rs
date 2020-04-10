@@ -9,12 +9,7 @@ const CHUNK_SIZE: usize = 1024;
 const STRIP_SIZE: usize = CHUNK_SIZE / 4;
 
 #[target_feature(enable = "avx2")]
-pub unsafe fn next_match(
-    hash: &mut u64,
-    table: &Table,
-    buf: &[u8],
-    mask: u64,
-) -> Option<usize> {
+pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -> Option<usize> {
     for (ic, chunk) in buf.chunks(CHUNK_SIZE).enumerate() {
         if chunk.len() != CHUNK_SIZE {
             return crate::scalar::next_match(hash, table, chunk, mask)

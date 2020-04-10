@@ -78,8 +78,6 @@ impl Default for Hasher<'static> {
 
 impl<'t> std::fmt::Debug for Hasher<'t> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_struct("Hasher")
-            .field("hash", &self.hash)
-            .finish()
+        f.debug_struct("Hasher").field("hash", &self.hash).finish()
     }
 }
