@@ -32,6 +32,14 @@ while let Some(boundary) = hasher.next_match(&buf[offset..], MASK) {
 chunks.push(&buf[offset..]);
 ```
 
+## Fuzzing
+
+To ensure memory safety of the `unsafe` SIMD code in this crate,
+we use [`cargo-fuzz`](https://rust-fuzz.github.io/book/cargo-fuzz.html).
+
+You can find the fuzzing targets under `fuzz/fuzz_targets`, which can be
+run using `cargo fuzz run <target>`.
+
 ## License
 
 This project is licensed under either of
