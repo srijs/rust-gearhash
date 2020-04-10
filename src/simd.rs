@@ -1,7 +1,7 @@
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-mod avx2;
+pub mod avx2;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-mod sse42;
+pub mod sse42;
 
 use crate::Table;
 

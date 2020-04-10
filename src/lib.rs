@@ -19,6 +19,9 @@ mod scalar;
 mod simd;
 mod table;
 
+#[cfg(fuzzing)]
+pub mod fuzzing;
+
 pub use table::{Table, DEFAULT_TABLE};
 
 /// Gear hash state.

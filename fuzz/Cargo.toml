@@ -1,0 +1,28 @@
+
+[package]
+name = "gearhash-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.3"
+
+[dependencies.gearhash]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "avx2"
+path = "fuzz_targets/avx2.rs"
+
+[[bin]]
+name = "sse42"
+path = "fuzz_targets/sse42.rs"

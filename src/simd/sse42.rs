@@ -9,7 +9,7 @@ const CHUNK_SIZE: usize = 512;
 const STRIP_SIZE: usize = CHUNK_SIZE / 2;
 
 #[target_feature(enable = "sse4.2")]
-pub(crate) unsafe fn next_match(
+pub unsafe fn next_match(
     hash: &mut u64,
     table: &Table,
     buf: &[u8],
