@@ -36,7 +36,7 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
@@ -56,7 +56,7 @@ jobs:
     name: fmt, clippy, docs, msrv, package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -80,7 +80,7 @@ jobs:
     name: cross-compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: i686-unknown-linux-gnu, aarch64-unknown-linux-gnu, riscv64gc-unknown-linux-gnu, wasm32-unknown-unknown
@@ -107,7 +107,7 @@ jobs:
             os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
