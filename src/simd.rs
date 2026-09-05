@@ -18,3 +18,40 @@ pub(crate) fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
 
     crate::scalar::next_match(hash, table, buf, mask)
 }
+
+#[cfg(all(test, target_arch = "x86_64"))]
+pub(crate) mod tests {
+    use crate::{DEFAULT_TABLE, Table};
+
+    pub(crate) fn agrees_with_scalar<F>(seed: u64, mask: u64, mut simd: F) -> bool
+    where
+        F: FnMut(&mut u64, &Table, &[u8], u64) -> Option<usize>,
+    {
+        const LEN: usize = 10240;
+
+        let mut bytes = [0u8; LEN];
+        let mut rng: rand::rngs::StdRng = rand::SeedableRng::seed_from_u64(seed);
+        rand::Rng::fill_bytes(&mut rng, &mut bytes);
+
+        let mut hash_scalar = 0u64;
+        let mut hash_simd = 0u64;
+        let mut offset = 0;
+
+        while offset < LEN {
+            let expected =
+                crate::scalar::next_match(&mut hash_scalar, &DEFAULT_TABLE, &bytes[offset..], mask);
+            let actual = simd(&mut hash_simd, &DEFAULT_TABLE, &bytes[offset..], mask);
+
+            if expected != actual || hash_scalar != hash_simd {
+                return false;
+            }
+
+            match expected {
+                Some(off) => offset += off,
+                None => return true,
+            }
+        }
+
+        true
+    }
+}

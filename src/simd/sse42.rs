@@ -72,41 +72,25 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
 
 #[cfg(test)]
 mod tests {
-    use super::next_match;
-    use crate::DEFAULT_TABLE;
-
-    quickcheck::quickcheck! {
-        fn check_against_scalar(seed: u64, mask: u64) -> bool {
-            let mut bytes = [0u8; 10240];
-            let mut rng: rand::rngs::StdRng = rand::SeedableRng::seed_from_u64(seed);
-            rand::Rng::fill_bytes(&mut rng, &mut bytes);
-
-            let mut hash1 = 0;
-            let mut hash2 = 0;
-
-            let mut offset = 0;
-            while offset < 10240 {
-                let result_scalar = crate::scalar::next_match(&mut hash1, &DEFAULT_TABLE, &bytes[offset..], mask);
-                let result_accelx = unsafe { next_match(&mut hash2, &DEFAULT_TABLE, &bytes[offset..], mask) };
-
-                match (result_scalar, result_accelx) {
-                    (Some(a), Some(b)) => {
-                        if a != b {
-                            return false;
-                        }
-                        offset += a;
-                    }
-                    (None, None) => {
-                        return true;
-                    }
-                    _ => {
-                        return false;
-                    }
-                }
-            }
-
-            true
+    #[test]
+    fn agrees_with_scalar() {
+        if !is_x86_feature_detected!("sse4.2") {
+            assert_ne!(
+                std::env::var("GEARHASH_REQUIRE_SIMD").as_deref(),
+                Ok("1"),
+                "sse4.2 is unavailable but GEARHASH_REQUIRE_SIMD is set"
+            );
+            eprintln!("skipping: sse4.2 is not available on this CPU");
+            return;
         }
+
+        fn prop(seed: u64, mask: u64) -> bool {
+            crate::simd::tests::agrees_with_scalar(seed, mask, |hash, table, buf, mask| unsafe {
+                super::next_match(hash, table, buf, mask)
+            })
+        }
+
+        quickcheck::QuickCheck::new().quickcheck(prop as fn(u64, u64) -> bool);
     }
 }
 
