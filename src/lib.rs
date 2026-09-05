@@ -4,8 +4,8 @@
 //! algorithm.
 //!
 //! The implementation provided in this crate consists of both a simple,
-//! scalar variant, as well as optimized versions for the SSE4.2 and AVX2
-//! instruction sets.
+//! scalar variant, as well as versions for the SSE4.2 and AVX2 instruction
+//! sets which are used automatically on x86_64 CPUs that support them.
 //!
 //! ## Example
 //!
