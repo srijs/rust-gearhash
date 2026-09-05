@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test / ${{ matrix.os }} / ${{ matrix.rust }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: stable
+          - os: ubuntu-24.04-arm
+            rust: stable
+          - os: macos-latest
+            rust: stable
+          - os: windows-latest
+            rust: stable
+          - os: ubuntu-latest
+            rust: beta
+          - os: ubuntu-latest
+            rust: nightly
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --all-targets
+      - name: Test
+        run: cargo test --all-targets -- --nocapture
+        env:
+          GEARHASH_REQUIRE_SIMD: ${{ runner.arch == 'X64' && '1' || '0' }}
+      - name: Test documentation examples
+        run: cargo test --doc
+
+  checks:
+    name: fmt, clippy, docs, msrv, package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install MSRV toolchain
+        run: rustup toolchain install 1.85.0 --profile minimal --no-self-update
+      - uses: Swatinem/rust-cache@v2
+      - name: Formatting
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Documentation
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+      - name: Minimum supported Rust version
+        run: cargo +1.85.0 check --lib
+      - name: Package
+        run: cargo package
+
+  cross:
+    name: cross-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-unknown-linux-gnu, aarch64-unknown-linux-gnu, riscv64gc-unknown-linux-gnu, wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --lib --target i686-unknown-linux-gnu
+      - run: cargo check --lib --target aarch64-unknown-linux-gnu
+      - run: cargo check --lib --target riscv64gc-unknown-linux-gnu
+      - run: cargo check --lib --target wasm32-unknown-unknown
+
+  nightly:
+    name: bench build and fuzz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-fuzz
+      - name: Build benches
+        run: cargo bench --features bench --no-run
+      - name: Fuzz avx2
+        run: cargo fuzz run avx2 -- -max_total_time=60
+        env:
+          RUSTFLAGS: ""
+      - name: Fuzz sse42
+        run: cargo fuzz run sse42 -- -max_total_time=60
+        env:
+          RUSTFLAGS: ""
+
+  success:
+    name: CI success
+    runs-on: ubuntu-latest
+    needs: [test, checks, cross, nightly]
+    if: always()
+    steps:
+      - name: Check that all jobs succeeded
+        run: |
+          for result in ${{ join(needs.*.result, ' ') }}; do
+            if [ "$result" != "success" ]; then
+              echo "A required job did not succeed: $result"
+              exit 1
+            fi
+          done
