@@ -100,11 +100,11 @@ jobs:
       - name: Build benches
         run: cargo bench --features bench --no-run
       - name: Fuzz avx2
-        run: cargo fuzz run avx2 -- -max_total_time=60
+        run: cargo fuzz run --target x86_64-unknown-linux-gnu avx2 -- -max_total_time=60
         env:
           RUSTFLAGS: ""
       - name: Fuzz sse42
-        run: cargo fuzz run sse42 -- -max_total_time=60
+        run: cargo fuzz run --target x86_64-unknown-linux-gnu sse42 -- -max_total_time=60
         env:
           RUSTFLAGS: ""
 
