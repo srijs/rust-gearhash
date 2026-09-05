@@ -7,7 +7,6 @@ license = "MIT OR Apache-2.0"
 authors = ["Sam Rijs <srijs@airpost.net>"]
 description = "Fast, SIMD-accelerated hash function for content-defined chunking"
 repository = "https://github.com/srijs/rust-gearhash"
-readme = "README.md"
 keywords = ["hash", "gear", "fast", "cdc", "chunking"]
 categories = ["algorithms"]
 
