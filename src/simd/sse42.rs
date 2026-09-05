@@ -15,15 +15,23 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
 
         let mut hx = 0u64;
         for i in 0..64 {
-            let b = *chunk.get_unchecked((STRIP_SIZE - 64) + i);
+            // SAFETY: `chunk` is exactly `CHUNK_SIZE` bytes long (checked above), and
+            // `STRIP_SIZE - 64 + i` < `CHUNK_SIZE` for `i < 64`.
+            let b = unsafe { *chunk.get_unchecked((STRIP_SIZE - 64) + i) };
             hx = (hx << 1).wrapping_add(table[b as usize]);
         }
 
         let mut h = _mm_set_epi64x(*hash as i64, hx as i64);
 
         for i in 0..STRIP_SIZE {
-            let b0 = *chunk.get_unchecked(STRIP_SIZE * 0 + i);
-            let b1 = *chunk.get_unchecked(STRIP_SIZE * 1 + i);
+            // SAFETY: `chunk` is exactly `CHUNK_SIZE` bytes long (checked above), and the
+            // largest index read here is `STRIP_SIZE + i` < `CHUNK_SIZE` for `i < STRIP_SIZE`.
+            let (b0, b1) = unsafe {
+                (
+                    *chunk.get_unchecked(i),
+                    *chunk.get_unchecked(STRIP_SIZE + i),
+                )
+            };
 
             let g = _mm_set_epi64x(table[b0 as usize] as i64, table[b1 as usize] as i64);
 
@@ -44,7 +52,7 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
 
             // If we find a match in the second strip, fall back to the scalar implementation to
             // see if we can find an earlier match in the first strip.
-            if z & (1u32 << 0) != 0 {
+            if z & 1u32 != 0 {
                 let rest = &chunk[i + 1..STRIP_SIZE];
                 *hash = _mm_extract_epi64(h, 1) as u64;
                 if let Some(off) = crate::scalar::next_match(hash, table, rest, mask) {

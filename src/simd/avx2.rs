@@ -16,9 +16,15 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
         let mut h = _mm256_setzero_si256();
 
         for i in 0..64 {
-            let b1 = *chunk.get_unchecked((STRIP_SIZE * 1 - 64) + i);
-            let b2 = *chunk.get_unchecked((STRIP_SIZE * 2 - 64) + i);
-            let b3 = *chunk.get_unchecked((STRIP_SIZE * 3 - 64) + i);
+            // SAFETY: `chunk` is exactly `CHUNK_SIZE` bytes long (checked above), and the
+            // largest index read here is `STRIP_SIZE * 3 - 64 + i` < `CHUNK_SIZE` for `i < 64`.
+            let (b1, b2, b3) = unsafe {
+                (
+                    *chunk.get_unchecked((STRIP_SIZE - 64) + i),
+                    *chunk.get_unchecked((STRIP_SIZE * 2 - 64) + i),
+                    *chunk.get_unchecked((STRIP_SIZE * 3 - 64) + i),
+                )
+            };
 
             let g = _mm256_set_epi64x(
                 0,
@@ -32,14 +38,20 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
 
         h = _mm256_insert_epi64(h, *hash as i64, 3);
 
-        let mut pre_off = usize::max_value();
+        let mut pre_off = usize::MAX;
         let mut pre_hash = 0u64;
 
         for i in 0..STRIP_SIZE {
-            let b0 = *chunk.get_unchecked(STRIP_SIZE * 0 + i);
-            let b1 = *chunk.get_unchecked(STRIP_SIZE * 1 + i);
-            let b2 = *chunk.get_unchecked(STRIP_SIZE * 2 + i);
-            let b3 = *chunk.get_unchecked(STRIP_SIZE * 3 + i);
+            // SAFETY: `chunk` is exactly `CHUNK_SIZE` bytes long (checked above), and the
+            // largest index read here is `STRIP_SIZE * 3 + i` < `CHUNK_SIZE` for `i < STRIP_SIZE`.
+            let (b0, b1, b2, b3) = unsafe {
+                (
+                    *chunk.get_unchecked(i),
+                    *chunk.get_unchecked(STRIP_SIZE + i),
+                    *chunk.get_unchecked(STRIP_SIZE * 2 + i),
+                    *chunk.get_unchecked(STRIP_SIZE * 3 + i),
+                )
+            };
 
             let g = _mm256_set_epi64x(
                 table[b0 as usize] as i64,
@@ -93,7 +105,7 @@ pub unsafe fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
             }
         }
 
-        if pre_off != usize::max_value() {
+        if pre_off != usize::MAX {
             *hash = pre_hash;
             return Some(ic * CHUNK_SIZE + pre_off + 1);
         }

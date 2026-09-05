@@ -1,13 +1,15 @@
 [package]
 name = "gearhash"
 version = "0.1.3"
-edition = "2018"
+edition = "2024"
+rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 authors = ["Sam Rijs <srijs@airpost.net>"]
 description = "Fast, SIMD-accelerated hash function for content-defined chunking"
 repository = "https://github.com/srijs/rust-gearhash"
 readme = "README.md"
 keywords = ["hash", "gear", "fast", "cdc", "chunking"]
+categories = ["algorithms"]
 
 [features]
 bench = []
