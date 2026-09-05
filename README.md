@@ -10,9 +10,10 @@ is well suited for content defined chunking.
 In particular, this function is used as a building block for the
 [FastCDC](https://www.usenix.org/node/196197) algorithm.
 
-The implementation provided in this crate consists of both a simple,
-scalar variant, as well as versions for the SSE4.2 and AVX2 instruction
-sets which are used automatically on x86_64 CPUs that support them.
+The implementation provided in this crate consists of a simple, scalar
+variant, as well as vectorised versions for the SSE4.2 and AVX2 instruction
+sets on x86_64 and for NEON on aarch64, which are used automatically on
+CPUs that support them.
 
 ## Usage
 

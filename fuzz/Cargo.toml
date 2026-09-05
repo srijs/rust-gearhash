@@ -20,6 +20,13 @@ path = ".."
 members = ["."]
 
 [[bin]]
+name = "neon"
+path = "fuzz_targets/neon.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "avx2"
 path = "fuzz_targets/avx2.rs"
 test = false

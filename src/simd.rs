@@ -1,3 +1,6 @@
+#[cfg(target_arch = "aarch64")]
+pub mod neon;
+
 #[cfg(target_arch = "x86_64")]
 pub mod avx2;
 #[cfg(target_arch = "x86_64")]
@@ -18,10 +21,18 @@ pub(crate) fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
         }
     }
 
+    #[cfg(target_arch = "aarch64")]
+    {
+        if std::arch::is_aarch64_feature_detected!("neon") {
+            // SAFETY: the `neon` target feature was just detected on this CPU.
+            return unsafe { neon::next_match(hash, table, buf, mask) };
+        }
+    }
+
     crate::scalar::next_match(hash, table, buf, mask)
 }
 
-#[cfg(all(test, target_arch = "x86_64"))]
+#[cfg(all(test, any(target_arch = "x86_64", target_arch = "aarch64")))]
 pub(crate) mod tests {
     use crate::{DEFAULT_TABLE, Table};
 
