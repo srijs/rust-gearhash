@@ -9,9 +9,11 @@ pub(crate) fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -
     #[cfg(target_arch = "x86_64")]
     {
         if is_x86_feature_detected!("avx2") {
+            // SAFETY: the `avx2` target feature was just detected on this CPU.
             return unsafe { avx2::next_match(hash, table, buf, mask) };
         }
         if is_x86_feature_detected!("sse4.2") {
+            // SAFETY: the `sse4.2` target feature was just detected on this CPU.
             return unsafe { sse42::next_match(hash, table, buf, mask) };
         }
     }

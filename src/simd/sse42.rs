@@ -85,6 +85,8 @@ mod tests {
         }
 
         fn prop(seed: u64, mask: u64) -> bool {
+            // SAFETY: `prop` is only reached once the `sse4.2` target feature has been
+            // detected on this CPU.
             crate::simd::tests::agrees_with_scalar(seed, mask, |hash, table, buf, mask| unsafe {
                 super::next_match(hash, table, buf, mask)
             })
@@ -98,6 +100,7 @@ mod tests {
 #[bench]
 fn throughput(b: &mut test::Bencher) {
     if is_x86_feature_detected!("sse4.2") {
+        // SAFETY: the `sse4.2` target feature was just detected on this CPU.
         crate::bench::throughput(b, |hash, buf, mask| unsafe {
             next_match(hash, &crate::DEFAULT_TABLE, buf, mask)
         })

@@ -30,6 +30,8 @@
 //! }
 //! ```
 
+#![deny(missing_docs, missing_debug_implementations)]
+#![cfg_attr(fuzzing, allow(missing_docs))]
 #![cfg_attr(feature = "bench", feature(test))]
 
 #[cfg(feature = "bench")]
