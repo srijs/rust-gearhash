@@ -10,7 +10,7 @@ edition = "2018"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = "0.3"
+libfuzzer-sys = "0.4"
 
 [dependencies.gearhash]
 path = ".."
@@ -22,7 +22,13 @@ members = ["."]
 [[bin]]
 name = "avx2"
 path = "fuzz_targets/avx2.rs"
+test = false
+doc = false
+bench = false
 
 [[bin]]
 name = "sse42"
 path = "fuzz_targets/sse42.rs"
+test = false
+doc = false
+bench = false

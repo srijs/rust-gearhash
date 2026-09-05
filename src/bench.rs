@@ -1,15 +1,15 @@
+use std::sync::LazyLock;
+
 const BENCH_INPUT_SEED: u64 = 0xa383d96f7becd17e;
 
 const BENCH_MASK: u64 = 0x0000d90003530000;
 
-lazy_static::lazy_static! {
-    static ref BENCH_INPUT_BUF: [u8; 1024 * 1024] = {
-        use rand::{RngCore, SeedableRng};
-        let mut bytes = [0u8; 1024 * 1024];
-        rand::rngs::StdRng::seed_from_u64(BENCH_INPUT_SEED).fill_bytes(&mut bytes);
-        bytes
-    };
-}
+static BENCH_INPUT_BUF: LazyLock<[u8; 1024 * 1024]> = LazyLock::new(|| {
+    use rand::{Rng, SeedableRng};
+    let mut bytes = [0u8; 1024 * 1024];
+    rand::rngs::StdRng::seed_from_u64(BENCH_INPUT_SEED).fill_bytes(&mut bytes);
+    bytes
+});
 
 pub(crate) fn throughput<F>(b: &mut test::Bencher, mut f: F)
 where

@@ -71,7 +71,7 @@ mod tests {
         fn check_against_scalar(seed: u64, mask: u64) -> bool {
             let mut bytes = [0u8; 10240];
             let mut rng: rand::rngs::StdRng = rand::SeedableRng::seed_from_u64(seed);
-            rand::RngCore::fill_bytes(&mut rng, &mut bytes);
+            rand::Rng::fill_bytes(&mut rng, &mut bytes);
 
             let mut hash1 = 0;
             let mut hash2 = 0;
