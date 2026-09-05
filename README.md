@@ -1,5 +1,9 @@
 # gearhash
 
+[![CI](https://github.com/srijs/rust-gearhash/actions/workflows/ci.yml/badge.svg)](https://github.com/srijs/rust-gearhash/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/gearhash.svg)](https://crates.io/crates/gearhash)
+[![docs.rs](https://docs.rs/gearhash/badge.svg)](https://docs.rs/gearhash)
+
 The GEAR hashing function is a fast, rolling hash function that
 is well suited for content defined chunking.
 
@@ -7,13 +11,19 @@ In particular, this function is used as a building block for the
 [FastCDC](https://www.usenix.org/node/196197) algorithm.
 
 The implementation provided in this crate consists of both a simple,
-scalar variant, as well as optimized versions for the SSE4.2 and AVX2
-instruction sets.
+scalar variant, as well as versions for the SSE4.2 and AVX2 instruction
+sets which are used automatically on x86_64 CPUs that support them.
 
 ## Usage
 
 ```rust
 use gearhash::Hasher;
+
+// the mask determines the average chunk size: a mask with `n` bits set
+// yields chunks averaging 2^n bytes
+const MASK: u64 = 0x0000_d900_0353_0000;
+
+let buf: &[u8] = b"the data to be split into content-defined chunks";
 
 // set up initial state
 let mut chunks = vec![];
